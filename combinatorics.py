@@ -1,23 +1,61 @@
 #!/usr/bin/env python3
-"""combinatorics - Permutations and combinations."""
-import sys,argparse,json,math,itertools
-def main():
-    p=argparse.ArgumentParser(description="Combinatorics")
-    sub=p.add_subparsers(dest="cmd")
-    c=sub.add_parser("choose");c.add_argument("n",type=int);c.add_argument("r",type=int)
-    pe=sub.add_parser("permute");pe.add_argument("n",type=int);pe.add_argument("r",type=int,nargs="?")
-    g=sub.add_parser("generate");g.add_argument("items",nargs="+");g.add_argument("--r",type=int)
-    args=p.parse_args()
-    if args.cmd=="choose":
-        v=math.comb(args.n,args.r)
-        print(json.dumps({"n":args.n,"r":args.r,"combinations":v,"with_repetition":math.comb(args.n+args.r-1,args.r)}))
-    elif args.cmd=="permute":
-        r=args.r or args.n;v=math.perm(args.n,r)
-        print(json.dumps({"n":args.n,"r":r,"permutations":v}))
-    elif args.cmd=="generate":
-        r=args.r or len(args.items)
-        perms=list(itertools.permutations(args.items,r))[:100]
-        combs=list(itertools.combinations(args.items,r))[:100]
-        print(json.dumps({"items":args.items,"r":r,"permutations":len(perms),"combinations":len(combs),"sample_perms":[list(p) for p in perms[:10]],"sample_combs":[list(c) for c in combs[:10]]}))
-    else:p.print_help()
-if __name__=="__main__":main()
+"""Combinatorics utilities. Zero dependencies."""
+import math
+
+def factorial(n):
+    if n < 0: raise ValueError
+    r = 1
+    for i in range(2, n + 1): r *= i
+    return r
+
+def nCr(n, r):
+    if r < 0 or r > n: return 0
+    return factorial(n) // (factorial(r) * factorial(n - r))
+
+def nPr(n, r):
+    if r < 0 or r > n: return 0
+    return factorial(n) // factorial(n - r)
+
+def catalan(n):
+    return nCr(2*n, n) // (n + 1)
+
+def derangements(n):
+    if n == 0: return 1
+    if n == 1: return 0
+    a, b = 1, 0
+    for i in range(2, n + 1): a, b = b, (i - 1) * (a + b)
+    return b
+
+def stirling2(n, k):
+    """Stirling numbers of the second kind."""
+    if n == 0 and k == 0: return 1
+    if n == 0 or k == 0: return 0
+    dp = [[0]*(k+1) for _ in range(n+1)]
+    dp[0][0] = 1
+    for i in range(1, n+1):
+        for j in range(1, min(i, k)+1):
+            dp[i][j] = j * dp[i-1][j] + dp[i-1][j-1]
+    return dp[n][k]
+
+def bell(n):
+    if n == 0: return 1
+    return sum(stirling2(n, k) for k in range(1, n+1))
+
+def generate_permutations(arr):
+    if len(arr) <= 1: return [arr[:]]
+    result = []
+    for i in range(len(arr)):
+        rest = arr[:i] + arr[i+1:]
+        for p in generate_permutations(rest):
+            result.append([arr[i]] + p)
+    return result
+
+def generate_combinations(arr, r):
+    if r == 0: return [[]]
+    if not arr: return []
+    with_first = [[arr[0]] + c for c in generate_combinations(arr[1:], r-1)]
+    without = generate_combinations(arr[1:], r)
+    return with_first + without
+
+if __name__ == "__main__":
+    print(f"C(10,3)={nCr(10,3)}, P(10,3)={nPr(10,3)}")
