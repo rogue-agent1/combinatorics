@@ -1,13 +1,14 @@
-# Combinatorics
+# combinatorics
 
-Combinatorics: permutations, combinations, partitions, Catalan.
+Permutations and combinations calculator
 
 ## Usage
 
 ```bash
-python3 combinatorics.py
+python3 combinatorics.py --help
 ```
 
-## License
+## Features
 
-MIT
+- Zero dependencies (Python 3.8+)
+- Single file implementation
